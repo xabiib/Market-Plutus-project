@@ -15,7 +15,9 @@ BUYER_ADDR=$(cat $WALLETS/buyer/payment.addr)
 SELLER_ADDR=$(cat $WALLETS/seller/payment.addr)
 MEDIATOR_ADDR=$(cat $WALLETS/mediator/payment.addr)
 
+
 SIGN_KEY=$(cat  $WALLETS/buyer/payment.skey)
+echo "HH  " + $OUTPUT_DIR
 TXHASH="89f292c41288ad0cd594ab81af9735aca809843ee4994bc851c963f818aafda5"
 TXIN="1"
 

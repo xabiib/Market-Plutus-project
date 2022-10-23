@@ -32,7 +32,6 @@ writeValidator file = writeFileTextEnvelope @(PlutusScript PlutusScriptV1) file 
 
 writeValidatorScript :: IO (Either (FileError ()) ())
 writeValidatorScript = writeValidator "src/temp/input/ProdValidator.plutus" $ Batch43.MarketValidator.validator
---ec03ca961e28b4345a382f03ffb925a9561abda609526dbcbb24d771.4261746368343370
 nftCurrencySymbol :: CurrencySymbol
 nftCurrencySymbol = "ec03ca961e28b4345a382f03ffb925a9561abda609526dbcbb24d771"
 

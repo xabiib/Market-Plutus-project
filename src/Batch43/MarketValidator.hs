@@ -29,21 +29,16 @@ data MarketDatum = MarketDatum
   , bAddress        :: !PubKeyHash              -- buyer address
   , mAddress        :: !PubKeyHash              -- mediator address
   , amount          :: !Integer                -- price of product
-  , productNFT      :: !AssetClass
+  , productNFT      :: !AssetClass             -- product NFT Asset Class
   , disputeFee      :: !Integer
-  -- deadLine        :: !POSIXTime
-  -- prodPolicyId    :: !CurrencySymbol          -- product NFT policy ID
-  -- prodTokenName   :: !TokenName               -- product NFT name
-  -- cdisbuteFees    :: !Integer                 -- 
   } 
-  -- !AssetClass
 
 PlutusTx.unstableMakeIsData ''MarketDatum
 
-data MarketRedeemer =  Buy | Refund | ToSeller | ToBuyer | Habib -- Accept, Disbute,
+data MarketRedeemer =  Buy | Refund | ToSeller | ToBuyer | Cancel
   deriving Show
 
-PlutusTx.makeIsDataIndexed ''MarketRedeemer [('Buy, 0), ('Refund, 1) ,('ToSeller, 2), ('ToBuyer, 3), ('Habib, 4) ]
+PlutusTx.makeIsDataIndexed ''MarketRedeemer [('Buy, 0), ('Refund, 1) ,('ToSeller, 2), ('ToBuyer, 3), ('Cancel, 4) ]
 PlutusTx.makeLift ''MarketRedeemer
 
 
@@ -60,11 +55,8 @@ seekDatum md = do
 {-# INLINEABLE mkValidator #-}
 mkValidator :: MarketDatum -> MarketRedeemer -> ScriptContext -> Bool
 mkValidator datum redeemer ctx =
-  case redeemer of
-
-                    
-   -- Accept     ->  traceIfFalse "Only Seller can UpdAccept The Txn"               signedBySeller && inputHasToken && outputHasToken
-              
+  case redeemer of                    
+             
     Buy        ->  traceIfFalse "Only Buyer Address can sign this Transaction"            signedByBuyer  &&
                    traceIfFalse "Amount must paid to Seller"                              amountPaid      &&
                    traceIfFalse "NFT must sent to Buyerr"                                 nftSendToBuyer
@@ -83,9 +75,7 @@ mkValidator datum redeemer ctx =
                    traceIfFalse "NFT return to Seller"                                    nftSendToSeller   &&
                    traceIfFalse "dispute fee should be sent to Mediator   "               feeToMediator       
     
-   -- Cancel     ->  traceIfFalse "OOnly Buyer Address can sign this Transaction"         
-
-    Habib      ->  traceIfFalse "Only Seller can Cancel Sale"                             True
+    Cancel      ->  traceIfFalse "Only Buyer can Cancel the Sale"                             False
 
   where
     info :: TxInfo
@@ -124,28 +114,7 @@ mkValidator datum redeemer ctx =
     nftSendToSeller :: Bool
     nftSendToSeller = assetClassValueOf valueToSeller (productNFT datum) == 1
 
-    inputHasToken :: Bool
-    inputHasToken = assetClassValueOf (txOutValue ownInput) (productNFT datum)  == 1
   
-    outputHasToken :: Bool
-    outputHasToken = assetClassValueOf (txOutValue ownOutput) (productNFT datum) == 1
-    
-    ownInput :: TxOut
-    ownInput = case findOwnInput ctx of
-        Nothing -> traceError "onput missing"
-        Just i  -> txInInfoResolved i
-
-    ownOutput :: TxOut
-    ownOutput = case getContinuingOutputs ctx of
-        [o] -> o
-        _   -> traceError "expected exactly one sale output"
-    
-    outputDatum :: MarketDatum
-    outputDatum = case seekDatum $ txOutDatumHash ownOutput >>= flip findDatum info of
-        Nothing -> traceError "Sale output datum not found"
-        Just d  -> d
-
-    
 
 data MarketTypes
 
